@@ -1,32 +1,27 @@
 const { validApiKey } = require("../../../utils/middleware/validApiKey");
+const { validateMsTeamsToken } = require("../../../utils/microsoftTeams");
 
 function apiAuthEndpoints(app) {
   if (!app) return;
 
   app.get("/v1/auth", [validApiKey], (_, response) => {
-    /* 
-    #swagger.tags = ['Authentication']
-    #swagger.description = 'Verify the attached Authentication header contains a valid API token.'
-    #swagger.responses[200] = {
-      description: 'Valid auth token was found.',
-      content: {
-        "application/json": {
-          schema: {
-            type: 'object',
-            example: {
-              authenticated: true,
-            }
-          }
-        }           
-      }
-    }  
-    #swagger.responses[403] = {
-      schema: {
-        "$ref": "#/definitions/InvalidAPIKey"
-      }
-    }
-    */
     response.status(200).json({ authenticated: true });
+  });
+
+  app.post("/v1/auth/ms-teams", async (request, response) => {
+    try {
+      const { token } = request.body;
+      const { valid, user, error } = await validateMsTeamsToken(token);
+
+      if (!valid) {
+        return response.status(401).json({ error });
+      }
+
+      response.status(200).json({ user, token });
+    } catch (e) {
+      console.error(e.message, e);
+      response.sendStatus(500).end();
+    }
   });
 }
 

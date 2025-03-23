@@ -1,5 +1,6 @@
-import React, { useState, createContext } from "react";
+import React, { useState, createContext, useEffect } from "react";
 import { AUTH_TIMESTAMP, AUTH_TOKEN, AUTH_USER } from "@/utils/constants";
+import * as microsoftTeams from "@microsoft/teams-js";
 
 export const AuthContext = createContext(null);
 export function ContextWrapper(props) {
@@ -23,6 +24,32 @@ export function ContextWrapper(props) {
       setStore({ user: null, authToken: null });
     },
   });
+
+  useEffect(() => {
+    microsoftTeams.initialize();
+
+    microsoftTeams.getContext((context) => {
+      if (context && context.userObjectId) {
+        // Fetch user details from your server using the userObjectId
+        fetch(`/api/auth/ms-teams`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ token: context.userObjectId }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.user && data.token) {
+              actions.updateUser(data.user, data.token);
+            }
+          })
+          .catch((error) => {
+            console.error("Error fetching MS Teams user details:", error);
+          });
+      }
+    });
+  }, []);
 
   return (
     <AuthContext.Provider value={{ store, actions }}>
