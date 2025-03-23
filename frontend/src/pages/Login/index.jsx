@@ -4,6 +4,7 @@ import { FullScreenLoader } from "@/components/Preloader";
 import { Navigate } from "react-router-dom";
 import paths from "@/utils/paths";
 import useQuery from "@/hooks/useQuery";
+import MsTeamsLogin from "./SSO/msTeams";
 
 export default function Login() {
   const query = useQuery();
@@ -11,5 +12,10 @@ export default function Login() {
   if (loading) return <FullScreenLoader />;
   if (requiresAuth === false) return <Navigate to={paths.home()} />;
 
-  return <PasswordModal mode={mode} />;
+  return (
+    <div>
+      <PasswordModal mode={mode} />
+      <MsTeamsLogin />
+    </div>
+  );
 }
